@@ -16,6 +16,33 @@ const characterSchema = new mongoose.Schema({
 
 const Character = mongoose.model('Character', characterSchema)
 
+const getDailyCharacter = async () => {
+    try {
+        // Usando o operador $rand para ordenar de maneira aleatória
+        const character = await Character.aggregate([
+            { $match: {} },  // Você pode adicionar um filtro se necessário
+            { $addFields: { randomSort: { $rand: {} } } }, // Adiciona um campo de ordenação aleatória
+            { $sort: { randomSort: 1 } }, // Ordena os resultados de forma aleatória
+            { $limit: 1 } // Limita a 1 resultado
+        ]);
+
+        return character[0]; // Retorna o personagem aleatório
+    } catch (error) {
+        console.error('Erro ao buscar o personagem do dia:', error);
+        throw error;
+    }
+};
+
+// Rota no backend
+router.get('/daily', async (req, res) => {
+    try {
+        const character = await getDailyCharacter();
+        res.json(character);
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to fetch daily character' });
+    }
+});
+
 router.get('/', async (req, res) => {
     try {
         const {name, gender, filiation, race, hair_color, eye_color, introducion_arc, family, techniques} = req.query
