@@ -10,13 +10,15 @@ const characterSchema = new mongoose.Schema({
     hair_color: String,
     eye_color: String,
     introducion_arc: String,
+    family: String,
+    techniques: String,
 })
 
 const Character = mongoose.model('Character', characterSchema)
 
 router.get('/', async (req, res) => {
     try {
-        const {name, gender, filiation, race, hair_color, eye_color, introducion_arc} = req.query
+        const {name, gender, filiation, race, hair_color, eye_color, introducion_arc, family, techniques} = req.query
 
         const filter = {}
 
@@ -33,7 +35,8 @@ router.get('/', async (req, res) => {
         if(hair_color) filter.hair_color = hair_color
         if(eye_color) filter.eye_color = eye_color
         if(introducion_arc) filter.introducion_arc = introducion_arc
-
+        if(family) filter.family = family 
+        if(techniques) filter.techniques = techniques 
 
         const character = await Character.find(filter)
         res.send(character)
@@ -51,7 +54,9 @@ router.post('/', async (req, res) => {
             race: req.body.race,
             hair_color: req.body.hair_color,
             eye_color: req.body.eye_color,
-            introducion_arc: req.body.introducion_arc
+            introducion_arc: req.body.introducion_arc,
+            family: req.body.family,
+            techniques: req.body.techniques,
         })
         
         await newCharacter.save()
@@ -74,7 +79,9 @@ router.patch('/:id', async (req, res) => {
                 race: req.body.race,
                 hair_color: req.body.hair_color,
                 eye_color: req.body.eye_color,
-                introducion_arc: req.body.introducion_arc
+                introducion_arc: req.body.introducion_arc,
+                family: req.body.family,
+                techniques: req.body.techniques
             },
             {
                 new: true,
