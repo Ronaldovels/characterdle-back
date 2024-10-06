@@ -60,7 +60,7 @@ router.get('/', async (req, res) => {
 
         if(name) {
             const names = name.split(',')
-            filter.name = {$in: names.map(name => new RegExp (name, 'i'))}
+            filter.name = {$in: names.map(name => new RegExp (`\\b${name}\\b`, 'i'))}
         }
         if(gender) filter.gender = gender 
         if(filiation) {
@@ -81,28 +81,26 @@ router.get('/', async (req, res) => {
     }
 })
 
+// Rota para criar múltiplos personagens
 router.post('/', async (req, res) => {
     try {
-        const newCharacter = new Character({
-            name: req.body.name,
-            gender: req.body.gender,
-            filiation: req.body.filiation,
-            race: req.body.race,
-            hair_color: req.body.hair_color,
-            eye_color: req.body.eye_color,
-            introducion_arc: req.body.introducion_arc,
-            family: req.body.family,
-            techniques: req.body.techniques,
-            characterImg: req.body.characterImg
-        })
-        
-        await newCharacter.save()
-        res.send(newCharacter)
+        const charactersData = req.body;
 
+        // Verifica se é um array e se contém pelo menos um item
+        if (!Array.isArray(charactersData) || charactersData.length === 0) {
+            return res.status(400).json({ error: 'Envie um array de personagens' });
+        }
+
+        // Insere todos os personagens de uma vez usando insertMany
+        const newCharacters = await Character.insertMany(charactersData);
+
+        res.status(201).json(newCharacters);
     } catch (error) {
-        res.status(400).json({error: 'Failed to create record'})
+        console.error('Erro ao criar personagens:', error);
+        res.status(400).json({ error: 'Failed to create characters' });
     }
-})
+});
+
 
 router.patch('/:id', async (req, res) => {
     const id = req.params.id
