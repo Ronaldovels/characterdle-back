@@ -12,6 +12,7 @@ const characterSchema = new mongoose.Schema({
     introducion_arc: String,
     family: String,
     techniques: String,
+    characterImg: String
 })
 
 const Character = mongoose.model('Character', characterSchema)
@@ -92,6 +93,7 @@ router.post('/', async (req, res) => {
             introducion_arc: req.body.introducion_arc,
             family: req.body.family,
             techniques: req.body.techniques,
+            characterImg: req.body.characterImg
         })
         
         await newCharacter.save()
@@ -116,7 +118,8 @@ router.patch('/:id', async (req, res) => {
                 eye_color: req.body.eye_color,
                 introducion_arc: req.body.introducion_arc,
                 family: req.body.family,
-                techniques: req.body.techniques
+                techniques: req.body.techniques,
+                characterImg: req.body.characterImg
             },
             {
                 new: true,
