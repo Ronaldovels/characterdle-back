@@ -70,32 +70,38 @@ router.get('/daily', async (req, res) => {
 
 router.get('/', async (req, res) => {
     try {
-        const {name, gender, filiation, race, hair_color, eye_color, introducion_arc, family, techniques} = req.query
+        const { name, exactMatch, gender, filiation, race, hair_color, eye_color, introducion_arc, family, techniques } = req.query;
+        const filter = {};
 
-        const filter = {}
-
-        if(name) {
-            const names = name.split(',')
-            filter.name = {$in: names.map(name => new RegExp (`\\b${name}\\b`, 'i'))}
+        if (name) {
+            const names = name.split(',');
+            if (exactMatch === 'true') {
+                // Busca por nomes exatos
+                filter.name = { $in: names.map((name) => new RegExp(`^${name}$`, 'i')) };
+            } else {
+                // Busca por nomes parciais (para sugestões)
+                filter.name = { $in: names.map((name) => new RegExp(name, 'i')) };
+            }
         }
-        if(gender) filter.gender = gender 
-        if(filiation) {
-            const filiations = filiation.split(',')
-            filter.filiation = {$in: filiations.map(filiation => new RegExp (filiation, 'i'))} 
+        if (gender) filter.gender = gender;
+        if (filiation) {
+            const filiations = filiation.split(',');
+            filter.filiation = { $in: filiations.map((filiation) => new RegExp(filiation, 'i')) };
         }
-        if(race) filter.race = race
-        if(hair_color) filter.hair_color = hair_color
-        if(eye_color) filter.eye_color = eye_color
-        if(introducion_arc) filter.introducion_arc = introducion_arc
-        if(family) filter.family = family 
-        if(techniques) filter.techniques = techniques 
+        if (race) filter.race = race;
+        if (hair_color) filter.hair_color = hair_color;
+        if (eye_color) filter.eye_color = eye_color;
+        if (introducion_arc) filter.introducion_arc = introducion_arc;
+        if (family) filter.family = family;
+        if (techniques) filter.techniques = techniques;
 
-        const character = await Character.find(filter)
-        res.send(character)
+        const characters = await Character.find(filter);
+        res.send(characters);
     } catch (error) {
-        res.status(500).json({error: 'Failed to fetch records'})
+        res.status(500).json({ error: 'Failed to fetch records' });
     }
-})
+});
+
 
 // Rota para criar múltiplos personagens
 router.post('/', async (req, res) => {
