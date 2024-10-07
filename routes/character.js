@@ -24,12 +24,27 @@ const getDailyCharacter = async () => {
             throw new Error('Nenhum personagem encontrado no banco de dados');
         }
 
-        // Pegue a data atual (UTC) e converta para o início do dia
-        const today = new Date();
-        const startOfDay = new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate()));
+        // Define a hora em que o personagem deve mudar (11:00 AM UTC)
+        const changeHour = 11;
 
-        // Converta a data para um número único (dias desde 1970)
-        const dayIndex = Math.floor(startOfDay.getTime() / (1000 * 60 * 60 * 24)) % count;
+        // Obtém a data atual (UTC)
+        const now = new Date();
+        
+        // Ajusta a data para o horário de troca (11:00 AM UTC do mesmo dia)
+        const changeTime = new Date(Date.UTC(
+            now.getUTCFullYear(),
+            now.getUTCMonth(),
+            now.getUTCDate(),
+            changeHour, 0, 0, 0
+        ));
+
+        // Se a hora atual for antes da hora de troca, subtrai um dia para pegar o personagem anterior
+        if (now < changeTime) {
+            changeTime.setUTCDate(changeTime.getUTCDate() - 1);
+        }
+
+        // Converte a data para um número único (dias desde 1970)
+        const dayIndex = Math.floor(changeTime.getTime() / (1000 * 60 * 60 * 24)) % count;
 
         // Seleciona o personagem baseado no índice calculado
         const character = await Character.findOne().skip(dayIndex);
@@ -40,6 +55,7 @@ const getDailyCharacter = async () => {
         throw error;
     }
 };
+
 
 // Rota no backend
 router.get('/daily', async (req, res) => {
