@@ -1,7 +1,6 @@
 const express = require('express')
 const router = express.Router()
 const mongoose = require('mongoose')
-const cron = require('node-cron')
 
 const characterSchema = new mongoose.Schema({
     name: String,
@@ -18,81 +17,55 @@ const characterSchema = new mongoose.Schema({
 
 const Character = mongoose.model('Character', characterSchema)
 
-const selectedCharacter = new mongoose.Schema({
-    characterId: mongoose.Schema.Types.ObjectId,
-})
-
-const SelectedCharacter = mongoose.model ('SelectedCharacter', selectedCharacter)
-
-async function selectRandomCharacter() {
+const getDailyCharacter = async () => {
     try {
-        const selectedCharacters = await SelectedCharacter.find()
-        const selectedIds = selectedCharacters.map((item) => item.characterId)
-
-
-        const unselectedCharacters = await Character.find({_id: {$nin: selectedIds} })
-
-        if (unselectedCharacters.length === 0) {
-
-            await SelectedCharacter.deleteMany( {} )
-
-            return selectRandomCharacter()
+        const count = await Character.countDocuments();
+        if (count === 0) {
+            throw new Error('Nenhum personagem encontrado no banco de dados');
         }
 
+        // Define a hora em que o personagem deve mudar (11:00 AM UTC)
+        const changeHour = 11;
 
-        const randomCharacter = unselectedCharacters[Math.floor(Math.random() * unselectedCharacters.length)]
+        // Obtém a data atual (UTC)
+        const now = new Date();
+        
+        // Ajusta a data para o horário de troca (11:00 AM UTC do mesmo dia)
+        const changeTime = new Date(Date.UTC(
+            now.getUTCFullYear(),
+            now.getUTCMonth(),
+            now.getUTCDate(),
+            changeHour, 0, 0, 0
+        ));
 
-        await SelectedCharacter.create( {characterId: randomCharacter._id} )
+        // Se a hora atual for antes da hora de troca, subtrai um dia para pegar o personagem anterior
+        if (now < changeTime) {
+            changeTime.setUTCDate(changeTime.getUTCDate() - 1);
+        }
 
-        console.log(`Personagem selecionado ${randomCharacter.name}`)
-        return  randomCharacter
+        // Converte a data para um número único (dias desde 1970)
+        const dayIndex = Math.floor(changeTime.getTime() / (1000 * 60 * 60 * 24)) % count;
 
+        // Seleciona o personagem baseado no índice calculado
+        const character = await Character.findOne().skip(dayIndex);
 
+        return character;
     } catch (error) {
-        console.log(`Erro ao selecionar um personagem`, error)
+        console.error('Erro ao buscar o personagem do dia:', error);
+        throw error;
     }
-}
+};
 
-function scheduleNextExecution() {
-    const now = new Date();
-    const nextExecution = new Date();
 
-    nextExecution.setUTCHours(10, 59, 59, 0);
-
-    if (nextExecution <= now) {
-        nextExecution.setUTCDate(now.getUTCDate() + 1);
-    }
-
-    const timeUntilNextExecution = nextExecution - now;
-
-    setTimeout(() => {
-        selectRandomCharacter();
-        setInterval(selectRandomCharacter, 24 * 60 * 60 * 1000); // Repeat every 24 hours
-    }, timeUntilNextExecution);
-}
-
-// Call the scheduling function
-scheduleNextExecution();
-
-router.get('/random', async (req, res) => {
+// Rota no backend
+router.get('/daily', async (req, res) => {
     try {
-        const lastSelected = await SelectedCharacter.findOne().sort({_id: -1}).populate('characterId')
-
-        if (!lastSelected) {
-            return res.status(404).json({message: 'Nenhum personagem foi selecionado ainda'})
-        }
-
-        const character = await Character.findById(lastSelected.characterId)
-
-        if (!character) {
-            return res.status(404).json({message: 'Não encontrado'})
-        }
-
-        res.json({character})
+        const character = await getDailyCharacter();
+        res.json(character);
     } catch (error) {
-        console.error(error)
+        res.status(500).json({ error: 'Failed to fetch daily character' });
     }
-})
+});
 
 
 router.get('/', async (req, res) => {
