@@ -19,53 +19,40 @@ const Character = mongoose.model('Character', characterSchema)
 
 const getDailyCharacter = async () => {
     try {
-        const count = await Character.countDocuments();
-        if (count === 0) {
-            throw new Error('Nenhum personagem encontrado no banco de dados');
-        }
-
-        // Define a hora em que o personagem deve mudar (11:00 AM UTC)
-        const changeHour = 11;
-
-        // Obtém a data atual (UTC)
-        const now = new Date();
-        
-        // Ajusta a data para o horário de troca (11:00 AM UTC do mesmo dia)
-        const changeTime = new Date(Date.UTC(
-            now.getUTCFullYear(),
-            now.getUTCMonth(),
-            now.getUTCDate(),
-            changeHour, 0, 0, 0
-        ));
-
-        // Se a hora atual for antes da hora de troca, subtrai um dia para pegar o personagem anterior
-        if (now < changeTime) {
-            changeTime.setUTCDate(changeTime.getUTCDate() - 1);
-        }
-
-        // Converte a data para um número único (dias desde 1970)
-        const dayIndex = Math.floor(changeTime.getTime() / (1000 * 60 * 60 * 24)) % count;
-
-        // Seleciona o personagem baseado no índice calculado
-        const character = await Character.findOne().skip(dayIndex);
-
-        return character;
+      const count = await Character.countDocuments();
+      if (count === 0) {
+        throw new Error('Nenhum personagem encontrado no banco de dados');
+      }
+  
+      // Obtenha o tempo atual em milissegundos desde 1970
+      const now = new Date().getTime();
+  
+      // Calcule o índice do personagem com base no tempo atual dividido por 3 minutos (em milissegundos)
+      const threeMinutesInMs = 3 * 60 * 1000; // 3 minutos em milissegundos
+      const characterIndex = Math.floor(now / threeMinutesInMs) % count;
+  
+      // Seleciona o personagem baseado no índice calculado
+      const character = await Character.findOne().skip(characterIndex);
+  
+      return character;
     } catch (error) {
-        console.error('Erro ao buscar o personagem do dia:', error);
-        throw error;
+      console.error('Erro ao buscar o personagem do dia:', error);
+      throw error;
     }
-};
+  };
+  
 
 
 // Rota no backend
 router.get('/daily', async (req, res) => {
     try {
-        const character = await getDailyCharacter();
-        res.json(character);
+      const character = await getDailyCharacter();
+      res.json(character);
     } catch (error) {
-        res.status(500).json({ error: 'Failed to fetch daily character' });
+      res.status(500).json({ error: 'Failed to fetch daily character' });
     }
-});
+  });
+  
 
 
 router.get('/', async (req, res) => {
