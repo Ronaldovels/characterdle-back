@@ -12,7 +12,11 @@ const characterSchema = new mongoose.Schema({
     introducion_arc: String,
     family: String,
     techniques: String,
-    characterImg: String
+    characterImg: String,
+    isSelected: {
+        type: Boolean,
+        default: false
+    }
 })
 
 const Character = mongoose.model('Character', characterSchema)
@@ -43,13 +47,21 @@ const getDailyCharacter = async () => {
             changeTime.setUTCDate(changeTime.getUTCDate() - 1);
         }
 
-        // Converte a data para um número único (dias desde 1970)
-        const dayIndex = Math.floor(changeTime.getTime() / (1000 * 60 * 60 * 24)) % count;
+        const unselectedCharacterCount = await Character.countDocuments({ isSelected: false })
+        if (unselectedCharacterCount === 0) {
+            await Character.updateMany({}, { isSelected: false })
+        }
 
-        // Seleciona o personagem baseado no índice calculado
-        const character = await Character.findOne().skip(dayIndex);
+        const randomCharacter = await Character.findOne( { isSelected: false}).skip(Math.floor(Math.random() * unselectedCharacterCount))
 
-        return character;
+        if (randomCharacter) {
+            randomCharacter.isSelected = true
+            await randomCharacter.save()
+        }
+
+        return randomCharacter
+
+
     } catch (error) {
         console.error('Erro ao buscar o personagem do dia:', error);
         throw error;
