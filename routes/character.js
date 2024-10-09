@@ -212,7 +212,9 @@ router.patch('/:id', async (req, res) => {
                 introducion_arc: req.body.introducion_arc,
                 family: req.body.family,
                 techniques: req.body.techniques,
-                characterImg: req.body.characterImg
+                characterImg: req.body.characterImg,
+                isSelected: req.body.isSelected,
+                lastSelectedDate: req.body.lastSelectedDate
             },
             {
                 new: true,
