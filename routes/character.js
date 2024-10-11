@@ -36,7 +36,7 @@ const getDailyCharacter = async () => {
 
         // Obtém a data atual (UTC)
         const now = new Date();
-        
+
         // Ajusta a data para o horário de troca (11:00 AM UTC do mesmo dia)
         const changeTime = new Date(Date.UTC(
             now.getUTCFullYear(),
@@ -63,7 +63,7 @@ const getDailyCharacter = async () => {
             await Character.updateMany({}, { isSelected: false })
         }
 
-        const randomCharacter = await Character.findOne( { isSelected: false}).skip(Math.floor(Math.random() * unselectedCharacterCount))
+        const randomCharacter = await Character.findOne({ isSelected: false }).skip(Math.floor(Math.random() * unselectedCharacterCount))
 
         if (randomCharacter) {
             randomCharacter.isSelected = true
@@ -81,6 +81,42 @@ const getDailyCharacter = async () => {
 };
 
 
+const getLastCharacter = async () => {
+    try {
+        // Obtém a data atual (UTC)
+        const now = new Date();
+
+        // Ajusta para o horário de troca (11:00 AM UTC)
+        const changeHour = 10;
+        const changeMinute = 59;
+        const changeSecond = 59;
+
+        const changeTime = new Date(Date.UTC(
+            now.getUTCFullYear(),
+            now.getUTCMonth(),
+            now.getUTCDate(),
+            changeHour, changeMinute, changeSecond, 0
+        ));
+
+        // Se a hora atual for antes da hora de troca, subtrai um dia para pegar o personagem anterior
+        if (now < changeTime) {
+            changeTime.setUTCDate(changeTime.getUTCDate() - 1);
+        }
+
+        // Busca um personagem cuja data de seleção seja antes do `changeTime` e ordena por data mais recente
+        const lastCharacter = await Character.findOne({
+            lastSelectedDate: { $lt: changeTime }
+        }).sort({ lastSelectedDate: -1 });
+
+        return lastCharacter;
+    } catch (error) {
+        console.error('Erro ao buscar o personagem do dia anterior:', error);
+        throw error;
+    }
+};
+
+
+
 // Rota no backend
 router.get('/daily', async (req, res) => {
     try {
@@ -88,6 +124,19 @@ router.get('/daily', async (req, res) => {
         res.json(character);
     } catch (error) {
         res.status(500).json({ error: 'Failed to fetch daily character' });
+    }
+});
+
+router.get('/last', async (req, res) => {
+    try {
+        const lastCharacter = await getLastCharacter();
+        if (lastCharacter) {
+            res.json(lastCharacter);
+        } else {
+            res.status(404).json({ error: 'No last character found' });
+        }
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to fetch last character' });
     }
 });
 
@@ -171,16 +220,16 @@ router.patch('/:id', async (req, res) => {
             }
         )
         if (!updateCharacter) {
-            return res.status(404).json({error: 'Character not found'})
+            return res.status(404).json({ error: 'Character not found' })
         }
         res.json(updateCharacter)
     } catch (error) {
-        res.status(400).json({error: "Can't update character"})
+        res.status(400).json({ error: "Can't update character" })
     }
 
 })
 
-router.delete('/:id', async (req,res) => {
+router.delete('/:id', async (req, res) => {
 
     const id = req.params.id
 
@@ -188,13 +237,13 @@ router.delete('/:id', async (req,res) => {
         const deleteCharacter = await Character.findByIdAndDelete(id)
 
         if (!deleteCharacter) {
-            return res.status(404).json({error: 'Character not found'})
+            return res.status(404).json({ error: 'Character not found' })
         }
 
-        res.json({message: 'Character deleted'})
+        res.json({ message: 'Character deleted' })
 
     } catch (error) {
-        res.status(500).json({error: 'Error deleting charatcer', details: error.message})
+        res.status(500).json({ error: 'Error deleting charatcer', details: error.message })
     }
 })
 
