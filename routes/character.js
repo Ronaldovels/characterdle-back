@@ -1,6 +1,7 @@
 const express = require('express')
 const router = express.Router()
 const mongoose = require('mongoose')
+const cron = require('node-cron')
 
 const characterSchema = new mongoose.Schema({
     name: String,
@@ -17,55 +18,81 @@ const characterSchema = new mongoose.Schema({
 
 const Character = mongoose.model('Character', characterSchema)
 
-const getDailyCharacter = async () => {
+const selectedCharacter = new mongoose.Schema({
+    characterId: mongoose.Schema.Types.ObjectId,
+})
+
+const SelectedCharacter = mongoose.model ('SelectedCharacter', selectedCharacter)
+
+async function selectRandomCharacter() {
     try {
-        const count = await Character.countDocuments();
-        if (count === 0) {
-            throw new Error('Nenhum personagem encontrado no banco de dados');
+        const selectedCharacters = await SelectedCharacter.find()
+        const selectedIds = selectedCharacters.map((item) => item.characterId)
+
+
+        const unselectedCharacters = await Character.find({_id: {$nin: selectedIds} })
+
+        if (unselectedCharacters.length === 0) {
+
+            await SelectedCharacter.deleteMany( {} )
+
+            return selectRandomCharacter()
         }
 
-        // Define a hora em que o personagem deve mudar (11:00 AM UTC)
-        const changeHour = 11;
 
-        // Obtém a data atual (UTC)
-        const now = new Date();
-        
-        // Ajusta a data para o horário de troca (11:00 AM UTC do mesmo dia)
-        const changeTime = new Date(Date.UTC(
-            now.getUTCFullYear(),
-            now.getUTCMonth(),
-            now.getUTCDate(),
-            changeHour, 0, 0, 0
-        ));
+        const randomCharacter = unselectedCharacters[Math.floor(Math.random() * unselectedCharacters.length)]
 
-        // Se a hora atual for antes da hora de troca, subtrai um dia para pegar o personagem anterior
-        if (now < changeTime) {
-            changeTime.setUTCDate(changeTime.getUTCDate() - 1);
+        await SelectedCharacter.create( {characterId: randomCharacter._id} )
+
+        console.log(`Personagem selecionado ${randomCharacter.name}`)
+        return  randomCharacter
+
+
+    } catch (error) {
+        console.log(`Erro ao selecionar um personagem`, error)
+    }
+}
+
+function scheduleNextExecution() {
+    const now = new Date();
+    const nextExecution = new Date();
+
+    nextExecution.setUTCHours(10, 59, 59, 0);
+
+    if (nextExecution <= now) {
+        nextExecution.setUTCDate(now.getUTCDate() + 1);
+    }
+
+    const timeUntilNextExecution = nextExecution - now;
+
+    setTimeout(() => {
+        selectRandomCharacter();
+        setInterval(selectRandomCharacter, 24 * 60 * 60 * 1000); // Repeat every 24 hours
+    }, timeUntilNextExecution);
+}
+
+// Call the scheduling function
+scheduleNextExecution();
+
+router.get('/random', async (req, res) => {
+    try {
+        const lastSelected = await SelectedCharacter.findOne().sort({_id: -1}).populate('characterId')
+
+        if (!lastSelected) {
+            return res.status(404).json({message: 'Nenhum personagem foi selecionado ainda'})
         }
 
-        // Converte a data para um número único (dias desde 1970)
-        const dayIndex = Math.floor(changeTime.getTime() / (1000 * 60 * 60 * 24)) % count;
+        const character = await Character.findById(lastSelected.characterId)
 
-        // Seleciona o personagem baseado no índice calculado
-        const character = await Character.findOne().skip(dayIndex);
+        if (!character) {
+            return res.status(404).json({message: 'Não encontrado'})
+        }
 
-        return character;
+        res.json({character})
     } catch (error) {
-        console.error('Erro ao buscar o personagem do dia:', error);
-        throw error;
+        console.error(error)
     }
-};
-
-
-// Rota no backend
-router.get('/daily', async (req, res) => {
-    try {
-        const character = await getDailyCharacter();
-        res.json(character);
-    } catch (error) {
-        res.status(500).json({ error: 'Failed to fetch daily character' });
-    }
-});
+})
 
 
 router.get('/', async (req, res) => {
