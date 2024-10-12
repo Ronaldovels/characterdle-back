@@ -2,6 +2,8 @@ const express = require('express')
 const router = express.Router()
 const mongoose = require('mongoose')
 
+
+
 const characterSchema = new mongoose.Schema({
     name: String,
     gender: String,
@@ -193,6 +195,18 @@ router.post('/', async (req, res) => {
     } catch (error) {
         console.error('Erro ao criar personagens:', error);
         res.status(400).json({ error: 'Failed to create characters' });
+    }
+});
+
+router.patch('/reset-last-selected-date', async (req, res) => {
+    try {
+        // Atualiza todos os documentos, setando lastSelectedDate para null
+        await Character.updateMany({}, { lastSelectedDate: null });
+
+        res.json({ message: 'All lastSelectedDate fields have been reset to null' });
+    } catch (error) {
+        console.error('Erro ao resetar os lastSelectedDate:', error);
+        res.status(500).json({ error: 'Failed to reset lastSelectedDate' });
     }
 });
 
