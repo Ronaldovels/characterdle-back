@@ -36,4 +36,4 @@ const keepAlive = () => {
   };
   
   // Envia um ping a cada 13 minutos para manter a API ativa
-  setInterval(keepAlive, 13 * 60 * 1000);
+  setInterval(keepAlive, 7 * 60 * 1000);
