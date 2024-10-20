@@ -8,12 +8,12 @@ const characterSchema = new mongoose.Schema({
     name: String,
     gender: String,
     filiation: String,
-    race: String,
+    ocupation: String,
+    studentClass: String,
+    age: Number,
+    year: String,
     hair_color: String,
     eye_color: String,
-    introducion_arc: String,
-    family: String,
-    techniques: String,
     characterImg: String,
     isSelected: {
         type: Boolean,
@@ -145,7 +145,7 @@ router.get('/last', async (req, res) => {
 
 router.get('/', async (req, res) => {
     try {
-        const { name, exactMatch, gender, filiation, race, hair_color, eye_color, introducion_arc, family, techniques } = req.query;
+        const { name, exactMatch, gender, filiation, ocupation, age, year, hair_color, eye_color, studentClass } = req.query;
         const filter = {};
 
         if (name) {
@@ -163,17 +163,20 @@ router.get('/', async (req, res) => {
             const filiations = filiation.split(',');
             filter.filiation = { $in: filiations.map((filiation) => new RegExp(filiation, 'i')) };
         }
-        if (race) filter.race = race;
+        if (ocupation) {
+            const ocupations = ocupation.split(',');
+            filter.ocupation = { $in: ocupations.map((ocupation) => new RegExp(ocupation, 'i')) };
+        }
+        if(studentClass) filter.studentClass = studentClass;
+        if (age) filter.age = age;
+        if (year) filter.year = year;
         if (hair_color) filter.hair_color = hair_color;
         if (eye_color) filter.eye_color = eye_color;
-        if (introducion_arc) filter.introducion_arc = introducion_arc;
-        if (family) filter.family = family;
-        if (techniques) filter.techniques = techniques;
 
         const characters = await Character.find(filter);
         res.send(characters);
     } catch (error) {
-        res.status(500).json({ error: 'Failed to fetch records' });
+        res.status(500).json({ error: 'Failed to fetch records'});
     }
 });
 
@@ -220,12 +223,12 @@ router.patch('/:id', async (req, res) => {
                 name: req.body.name,
                 gender: req.body.gender,
                 filiation: req.body.filiation,
-                race: req.body.race,
+                ocupation: req.body.ocupation,
+                studentClass: req.body.studentClass,
                 hair_color: req.body.hair_color,
                 eye_color: req.body.eye_color,
-                introducion_arc: req.body.introducion_arc,
-                family: req.body.family,
-                techniques: req.body.techniques,
+                age: req.body.age,
+                year: req.body.year,
                 characterImg: req.body.characterImg,
                 isSelected: req.body.isSelected,
                 lastSelectedDate: req.body.lastSelectedDate
