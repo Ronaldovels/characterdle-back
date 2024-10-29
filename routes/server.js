@@ -20,8 +20,11 @@ mongoose.connect(url)
     .then(() => console.log('Connected to MongoDB'))
     .catch((error) => console.log('Failed to connect to MongoDB', error))
 
-const characterRoute = require("./character")
-app.use('/character', characterRoute)
+const eisiCharacterRoute = require("./eminenceCharacter")
+app.use('/character/eisi', eisiCharacterRoute)
+
+const coteCharacterRoute = require("./coteCharacter")
+app.use('/character/cote', coteCharacterRoute)
 
 
 
@@ -36,4 +39,4 @@ const keepAlive = () => {
   };
   
   // Envia um ping a cada 13 minutos para manter a API ativa
-  setInterval(keepAlive, 7 * 60 * 1000);
+  //setInterval(keepAlive, 7 * 60 * 1000);

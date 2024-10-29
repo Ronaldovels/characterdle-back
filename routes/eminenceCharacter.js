@@ -22,7 +22,7 @@ const characterSchema = new mongoose.Schema({
     lastSelectedDate: Date
 })
 
-const Character = mongoose.model('Character', characterSchema)
+const Character = mongoose.model('eminenceCharacter', characterSchema)
 
 const getDailyCharacter = async () => {
     try {
