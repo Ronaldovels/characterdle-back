@@ -10,7 +10,6 @@ const characterSchema = new mongoose.Schema({
     filiation: String,
     occupation: String,
     race: String,
-    age: String,
     abilities : String,
     combatPower: String,
     specialWeapon: String,
@@ -168,7 +167,6 @@ router.get('/', async (req, res) => {
             filter.occupation = { $in: occupations.map((occupation) => new RegExp(occupation, 'i')) };
         }
         if (abilites) filter.abilites = abilites;
-        if (age) filter.age = age;
         if (race) filter.race = race;
         if (hair_color) filter.hair_color = hair_color;
         if (eye_color) filter.eye_color = eye_color;
