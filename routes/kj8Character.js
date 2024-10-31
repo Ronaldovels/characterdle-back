@@ -11,10 +11,9 @@ const characterSchema = new mongoose.Schema({
     occupation: String,
     race: String,
     age: String,
-    hair_color: String,
-    eye_color: String,
     abilities : String,
-    CombatPower: String,
+    combatPower: String,
+    specialWeapon: String,
     characterImg: String,
     isSelected: {
         type: Boolean,
