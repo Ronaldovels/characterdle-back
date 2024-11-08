@@ -7,12 +7,11 @@ const mongoose = require('mongoose')
 const characterSchema = new mongoose.Schema({
     name: String,
     gender: String,
-    filiation: String,
+    age: String,
+    hair_color: String,
     occupation: String,
-    race: String,
-    abilities : String,
-    combatPower: String,
-    specialWeapon: String,
+    firstAppearance : String,
+    majorCrime: String,
     characterImg: String,
     isSelected: {
         type: Boolean,
@@ -21,7 +20,7 @@ const characterSchema = new mongoose.Schema({
     lastSelectedDate: Date
 })
 
-const Character = mongoose.model('kj8Character', characterSchema)
+const Character = mongoose.model('bbdCharacter', characterSchema)
 
 const getDailyCharacter = async () => {
     try {
@@ -214,22 +213,13 @@ router.patch('/reset-last-selected-date', async (req, res) => {
 
 router.patch('/:id', async (req, res) => {
     const id = req.params.id
+    const charactersData = req.body;
 
 
     try {
         const updateCharacter = await Character.findByIdAndUpdate(id,
             {
-                name: req.body.name,
-                gender: req.body.gender,
-                filiation: req.body.filiation,
-                race: req.body.race,
-                occupation: req.body.occupation,
-                abilities: req.body. abilities,
-                combatPower: req.body.combatPower,
-                specialWeapon: req.body.specialWeapon,
-                characterImg: req.body.characterImg,
-                isSelected: req.body.isSelected,
-                lastSelectedDate: req.body.lastSelectedDate
+                charactersData 
             },
             {
                 new: true,
