@@ -29,6 +29,9 @@ app.use('/character/cote', coteCharacterRoute)
 const kj8CharacterRoute = require("./kj8Character")
 app.use('/character/kj8', kj8CharacterRoute)
 
+const bbdCharacterRoute = require("./bbdCharacter")
+app.use('/character/bbd', bbdCharacterRoute)
+
 app.listen(port, () => {
     console.log(`Servidor rodando na porta ${port}`);
 });

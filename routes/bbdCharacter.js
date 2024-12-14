@@ -10,6 +10,7 @@ const characterSchema = new mongoose.Schema({
     age: String,
     hair_color: String,
     occupation: String,
+    affiliation: String,
     firstAppearance : String,
     majorCrime: String,
     characterImg: String,
@@ -143,7 +144,7 @@ router.get('/last', async (req, res) => {
 
 router.get('/', async (req, res) => {
     try {
-        const { name, exactMatch, gender, filiation, occupation, age, race, hair_color, eye_color, abilites } = req.query;
+        const { name, exactMatch, gender, filiation, occupation, hair_color, eye_color } = req.query;
         const filter = {};
 
         if (name) {
@@ -165,10 +166,7 @@ router.get('/', async (req, res) => {
             const occupations = occupation.split(',');
             filter.occupation = { $in: occupations.map((occupation) => new RegExp(occupation, 'i')) };
         }
-        if (abilites) filter.abilites = abilites;
-        if (race) filter.race = race;
         if (hair_color) filter.hair_color = hair_color;
-        if (eye_color) filter.eye_color = eye_color;
 
         const characters = await Character.find(filter);
         res.send(characters);
